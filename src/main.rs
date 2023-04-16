@@ -1,6 +1,7 @@
 use std::{sync::Mutex, time::Duration};
 
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
 struct AppState {
     app_name: String,    // shared state
@@ -59,6 +60,13 @@ fn config(cfg: &mut web::ServiceConfig) {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // load TLS keys
+    let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+    builder
+        .set_private_key_file("key.pem", SslFiletype::PEM)
+        .unwrap();
+    builder.set_certificate_chain_file("cert.pem").unwrap();
+
     let state = web::Data::new(AppState {
         app_name: String::from("web-api-sample"),
         counter: Mutex::new(0),
@@ -73,7 +81,7 @@ async fn main() -> std::io::Result<()> {
             .service(echo)
             .service(heaver_process_handler)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind_openssl("127.0.0.1:8080", builder)?
     .run()
     .await
 }
