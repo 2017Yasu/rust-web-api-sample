@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::{sync::Mutex, time::Duration};
 
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 
@@ -28,6 +28,13 @@ async fn count(data: web::Data<AppState>) -> impl Responder {
 #[post("/echo")]
 async fn echo(req_body: String) -> impl Responder {
     HttpResponse::Ok().body(req_body)
+}
+
+// /heavy
+#[get("/heavy")]
+async fn heaver_process_handler() -> impl Responder {
+    tokio::time::sleep(Duration::from_secs(5)).await;
+    "heavy process done!"
 }
 
 // /api
@@ -64,6 +71,7 @@ async fn main() -> std::io::Result<()> {
             .service(web::scope("/api").configure(scoped_config))
             .service(index)
             .service(echo)
+            .service(heaver_process_handler)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

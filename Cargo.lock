@@ -1051,6 +1051,7 @@ name = "web-api-sample"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "tokio",
 ]
 
 [[package]]
